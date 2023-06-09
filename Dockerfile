@@ -20,7 +20,7 @@ WORKDIR /src
 RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
 
-WORKDIR /src/whisper-jax
+WORKDIR /src
 RUN pip install -e .["endpoint"]
 RUN pip install --upgrade gradio_client
 
@@ -30,6 +30,6 @@ WORKDIR ${WORKSPACE}
 VOLUME [ "${PERSISTENT_FOLDER}", "${WORKSPACE}/scratch" ]
 ARG PORT=7860
 EXPOSE PORT
-ARG WHISPER_APP_PATH=./src/whisper-jax/app/app.py
+ARG WHISPER_APP_PATH=./src/app/app.py
 
 CMD ["python","${WHISPER_APP_PATH}", "--host", "0.0.0.0", "--port", "${PORT}", "--reload"]
