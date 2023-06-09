@@ -1,0 +1,32 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: whisper-server
+
+    ports:
+      - 7860:7860
+      - 5678:5678
+    volumes:
+      - .:/workspace
+
+    command: python ./src/whisper-jax/app/app.py --host 0.0.0.0 --port 7860 --reload
+
+
+  jupyterlab:
+    build:
+      context: .
+      dockerfile: gpu.dockerfile
+      args:
+        NVIDIA_IMAGE: nvcr.io/nvidia/tensorflow:21.11-tf2-py3
+
+    ports:
+      - 8888:8888
+    volumes:
+      - ./data/workspace:/workspace
+      - ./data/work:/workspace/work
+      - ./data/openrefine:/workspace/openrefine
+
+    command: jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser "--ServerApp.token=''" --config=/etc/jupyter/jupyter_notebook_config.py
