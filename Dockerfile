@@ -29,7 +29,7 @@ ENV PERSISTENT_FOLDER="${WORKSPACE}/persistent"
 WORKDIR ${WORKSPACE}
 VOLUME [ "${PERSISTENT_FOLDER}", "${WORKSPACE}/scratch" ]
 ARG PORT=7860
-EXPOSE PORT
+EXPOSE 7860
 ARG WHISPER_APP_PATH=./src/app/app.py
 
 CMD ["python","${WHISPER_APP_PATH}", "--host", "0.0.0.0", "--port", "${PORT}", "--reload"]

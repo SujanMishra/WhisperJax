@@ -18,7 +18,7 @@ services:
   jupyterlab:
     build:
       context: .
-      dockerfile: gpu.dockerfile
+      dockerfile: Jupyterlab/jupytergpu.dockerfile
       args:
         NVIDIA_IMAGE: nvcr.io/nvidia/tensorflow:21.11-tf2-py3
 
@@ -29,4 +29,4 @@ services:
       - ./data/work:/workspace/work
       - ./data/openrefine:/workspace/openrefine
 
-    command: jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser "--ServerApp.token=''" --config=/etc/jupyter/jupyter_notebook_config.py
+    command: jupyter lab --allow-root --ip=0.0.0.0 --port=8888 --no-browser --config=/etc/jupyter/jupyter_notebook_config.py

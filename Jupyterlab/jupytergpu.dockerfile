@@ -57,13 +57,13 @@ RUN cd /opt && \
     wget https://open-vsx.org/api/vemonet/stardog-rdf-grammars/$EXT_VERSION/file/vemonet.stardog-rdf-grammars-$EXT_VERSION.vsix && \
     code-server --install-extension vemonet.stardog-rdf-grammars-$EXT_VERSION.vsix
 
-COPY settings.json /root/.local/share/code-server/User/settings.json
-COPY settings.json /home/$NB_USER/.local/share/code-server/User/settings.json
+COPY Jupyterlab/settings.json /root/.local/share/code-server/User/settings.json
+COPY Jupyterlab/settings.json /home/$NB_USER/.local/share/code-server/User/settings.json
 
 # Add jupyter config script run at the start of the container
 USER root
 COPY Jupyterlab/icons/*.svg /etc/jupyter/
-COPY jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
+COPY Jupyterlab/jupyter_notebook_config.py /etc/jupyter/jupyter_notebook_config.py
 
 # Install Oh My ZSH! and custom theme
 RUN sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
