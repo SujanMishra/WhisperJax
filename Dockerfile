@@ -1,35 +1,63 @@
-FROM python:3.10-slim
-# alias
-RUN echo 'alias python="python3"' >> ~/.bashrc
-RUN echo 'alias pip="pip3"' >> ~/.bashrc
+# Base image
+ARG BASE_IMAGE=nvcr.io/nvidia/cuda:12.0.1-cudnn8-devel-ubuntu22.04
+FROM ${BASE_IMAGE} as dev-base
+
+# Working directory
+WORKDIR /workspace
+
+# Set necessary environment variables
+ENV DEBIAN_FRONTEND=noninteractive\
+    SHELL=/bin/bash\
+    PATH="/root/.local/bin:$PATH"
+
+# Update, upgrade, and install necessary packages
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends\
+    git\
+    wget\
+    curl\
+    libgl1\
+    software-properties-common\
+    openssh-server\
+    python3.10-dev python3.10-venv && \
+    add-apt-repository -y ppa:deadsnakes/ppa && \
+    rm -rf /var/lib/apt/lists/* && \
+    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen
+
+# Set Python and pip
+RUN ln -s /usr/bin/python3.10 /usr/bin/python && \
+    curl https://bootstrap.pypa.io/get-pip.py | python && \
+    rm -f get-pip.py
+
+# Install Python packages
+COPY dist/xformers-0.0.21a205b24.d20230530-cp310-cp310-linux_x86_64.whl /tmp
+RUN pip install --no-cache-dir --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu121 && \
+    pip install --no-cache-dir -U jupyterlab ipywidgets jupyter-archive jupyter_contrib_nbextensions /tmp/xformers-0.0.21a205b24.d20230530-cp310-cp310-linux_x86_64.whl && \
+    jupyter nbextension enable --py widgetsnbextension && \
+    rm -f /tmp/xformers-0.0.21a205b24.d20230530-cp310-cp310-linux_x86_64.whl
+
+distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+      && curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg \
+      && curl -s -L https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list | \
+            sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' | \
+            sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+
+COPY ./requirements.txt ./
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+
+RUN pip install --upgrade "jax[cuda12_local]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+
+RUN  pip install --upgrade gradio_client
 
 
+RUN git clone https://github.com/sanchit-gandhi/whisper-jax
 
-WORKDIR /
-
-COPY requirements.txt requirements.txt
-
-RUN python -m pip install --upgrade pip
-
-RUN python -m pip install -r requirements.txt
-
-COPY src ./src
-
-WORKDIR /src
-
-RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
-
-WORKDIR /src
-RUN pip install -e .["endpoint"]
-RUN pip install --upgrade gradio_client
-
-ENV WORKSPACE="/workspace"
-ENV PERSISTENT_FOLDER="${WORKSPACE}/persistent"
-WORKDIR ${WORKSPACE}
-VOLUME [ "${PERSISTENT_FOLDER}", "${WORKSPACE}/scratch" ]
-ARG PORT=7860
 EXPOSE 7860
-ARG WHISPER_APP_PATH=./src/app/app.py
 
-CMD ["python","${WHISPER_APP_PATH}", "--host", "0.0.0.0", "--port", "${PORT}", "--reload"]
+# Add start script
+
+COPY start.sh /workspace
+RUN chmod +x /workspace/start.sh
+
+CMD ["/workspace/start.sh"]
