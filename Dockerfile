@@ -49,8 +49,6 @@ RUN  pip install --upgrade gradio_client
 
 RUN git clone https://github.com/sanchit-gandhi/whisper-jax
 
-EXPOSE 7860
-
 # Add start script
 
 COPY start.sh /workspace
